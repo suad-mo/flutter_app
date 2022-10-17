@@ -4,7 +4,9 @@ import 'package:flutter_bloc_counter/blocs/app_blocs.dart';
 import 'package:flutter_bloc_counter/blocs/user_blocs.dart';
 import 'package:flutter_bloc_counter/blocs/user_events.dart';
 import 'package:flutter_bloc_counter/events/app_events.dart';
+import 'package:flutter_bloc_counter/models/user_model.dart';
 import 'package:flutter_bloc_counter/repos/repositories.dart';
+import 'package:flutter_bloc_counter/screens/detail_scren.dart';
 import 'package:flutter_bloc_counter/second_page.dart';
 import 'package:flutter_bloc_counter/states/app_states.dart';
 
@@ -52,6 +54,51 @@ class Home extends StatelessWidget {
             if (state is UserLoadingState) {
               return const Center(
                 child: CircularProgressIndicator(),
+              );
+            }
+
+            if (state is UserLoadedState) {
+              final List<UserModel> userList = state.users;
+              return ListView.builder(
+                itemCount: userList.length,
+                itemBuilder: (_, index) => Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => DetailScreen(e: userList[index]),
+                      ));
+                    },
+                    child: Card(
+                      color: Colors.blue,
+                      elevation: 4,
+                      margin: const EdgeInsets.symmetric(vertical: 10),
+                      child: ListTile(
+                        title: Text(
+                          userList[index].firstName,
+                          style: const TextStyle(
+                            color: Colors.white,
+                          ),
+                        ),
+                        subtitle: Text(
+                          userList[index].lastName,
+                          style: const TextStyle(
+                            color: Colors.white,
+                          ),
+                        ),
+                        trailing: CircleAvatar(
+                            backgroundImage:
+                                NetworkImage(userList[index].avatar)),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            if (state is UserErrorState) {
+              return Center(
+                child: Text(state.error),
               );
             }
 

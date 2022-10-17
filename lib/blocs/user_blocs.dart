@@ -1,8 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:flutter_bloc_counter/blocs/user_events.dart';
-import 'package:flutter_bloc_counter/blocs/user_states.dart';
-import 'package:flutter_bloc_counter/repos/repositories.dart';
+import '../repos/repositories.dart';
+import 'user_events.dart';
+import 'user_states.dart';
 
 class UserBloc extends Bloc<UserEvent, UserState> {
   final UserRepository _userRepository;
@@ -11,6 +11,12 @@ class UserBloc extends Bloc<UserEvent, UserState> {
     on<LoadUserEvent>(
       (event, emit) async {
         emit(UserLoadingState());
+        try {
+          final users = await _userRepository.getUsers();
+          emit(UserLoadedState(users));
+        } catch (e) {
+          emit(UserErrorState(e.toString()));
+        }
       },
     );
   }
