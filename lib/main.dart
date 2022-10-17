@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_bloc_counter/blocs/app_blocs.dart';
+import 'package:flutter_bloc_counter/blocs/user_blocs.dart';
+import 'package:flutter_bloc_counter/blocs/user_events.dart';
 import 'package:flutter_bloc_counter/events/app_events.dart';
+import 'package:flutter_bloc_counter/models/user_model.dart';
+import 'package:flutter_bloc_counter/repos/repositories.dart';
+import 'package:flutter_bloc_counter/screens/detail_scren.dart';
 import 'package:flutter_bloc_counter/second_page.dart';
 import 'package:flutter_bloc_counter/states/app_states.dart';
+
+import 'blocs/user_states.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,24 +22,89 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Flutter Demo',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      // home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: RepositoryProvider(
+        create: (context) => UserRepository(),
+        child: const Home(),
+      ),
+    );
+  }
+}
+
+class Home extends StatelessWidget {
+  const Home({super.key});
+
+  @override
+  Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => CounterBlocs(),
-      child: MaterialApp(
-        title: 'Flutter Demo',
-        theme: ThemeData(
-          // This is the theme of your application.
-          //
-          // Try running your application with "flutter run". You'll see the
-          // application has a blue toolbar. Then, without quitting the app, try
-          // changing the primarySwatch below to Colors.green and then invoke
-          // "hot reload" (press "r" in the console where you ran "flutter run",
-          // or simply save your changes to "hot reload" in a Flutter IDE).
-          // Notice that the counter didn't reset back to zero; the application
-          // is not restarted.
-          primarySwatch: Colors.blue,
+      create: (context) => UserBloc(
+        RepositoryProvider.of<UserRepository>(context),
+      )..add(LoadUserEvent()),
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('The BloC App'),
         ),
-        // home: const MyHomePage(title: 'Flutter Demo Home Page'),
-        home: const HomePage(),
+        body: BlocBuilder<UserBloc, UserState>(
+          builder: (context, state) {
+            if (state is UserLoadingState) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+
+            if (state is UserLoadedState) {
+              final List<UserModel> userList = state.users;
+              return ListView.builder(
+                itemCount: userList.length,
+                itemBuilder: (_, index) => Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => DetailScreen(e: userList[index]),
+                      ));
+                    },
+                    child: Card(
+                      color: Colors.blue,
+                      elevation: 4,
+                      margin: const EdgeInsets.symmetric(vertical: 10),
+                      child: ListTile(
+                        title: Text(
+                          userList[index].firstName,
+                          style: const TextStyle(
+                            color: Colors.white,
+                          ),
+                        ),
+                        subtitle: Text(
+                          userList[index].lastName,
+                          style: const TextStyle(
+                            color: Colors.white,
+                          ),
+                        ),
+                        trailing: CircleAvatar(
+                            backgroundImage:
+                                NetworkImage(userList[index].avatar)),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            if (state is UserErrorState) {
+              return Center(
+                child: Text(state.error),
+              );
+            }
+
+            return Container();
+          },
+        ),
       ),
     );
   }
