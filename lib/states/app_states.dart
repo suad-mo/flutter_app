@@ -9,7 +9,9 @@ class InitialState extends CounterStates {
 }
 
 // date loaded state
-
+// class LoadedState extends CounterStates {
+//   LoadedState() : super(counter: counter);
+// }
 
 
 // data error loading state
